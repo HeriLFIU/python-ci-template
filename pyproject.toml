@@ -1,0 +1,182 @@
+[project]
+name = "amlight-programmable-data-plane"
+version = "0.1.0"
+description = "Project Template"
+authors = [{ name = "Someone Something", email = "email@gmail.com" }]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Private :: Do Not Upload",               # Remove if public
+]
+
+[project.urls]
+repository = "https://github.com/amlight/amlight-programmable-data-plane.git"
+
+[dependency-groups]
+dev = [
+  { include-group = "test" },
+  { include-group = "lint" },
+  { include-group = "prof" },
+  "commitizen>=4.16.3",
+  "prek>=0.4.0",
+]
+test = [
+  "pytest>=9.0.3",
+  "pytest-asyncio>=1.4.0",
+  "pytest-benchmark>=5.2.3",
+  "pytest-cov>=7.1.0",
+  "pytest-deadfixtures>=3.1.0",
+  "pytest-env>=1.1.3",
+  "pytest-mock>=3.15.1",
+  "pytest-randomly>=4.1.0",
+  "pytest-socket>=0.7.0",
+  "pytest-sugar>=1.1.1",
+  "pytest-testinfra>=10.2.2",
+  "pytest-timeout>=2.4.0",
+  "pytest-xdist>=3.8.0",
+  "syrupy>=5.3.2",
+]
+lint = ["ruff>=0.15.13", "codespell>=2.2.6", "pyright>=1.1.410"]
+prof = ["scalene>=2.3.0"]
+
+[project.scripts]
+amlight-programmable-data-plane = "amlight_programmable_data_plane:main"
+
+[build-system]
+requires = ["uv_build>=0.11.14,<0.12.0"]
+build-backend = "uv_build"
+
+[tool.pyright]
+include = ["src", "tests"]
+typeCheckingMode = "strict"
+pythonVersion = "3.12"
+venvPath = "."
+venv = ".venv"
+
+# Uncomment this if you want to use commitizen to manage your releases
+# You will have to modify the CI workflow or create your own workflow to use commitizen
+# Commitizen was replaced with Google's "Release Please" CI Tool
+# [tool.commitizen]
+# name = "cz_conventional_commits"
+# tag_format = "$version"
+# version_scheme = "pep440"
+# version_provider = "uv"
+# update_changelog_on_bump = true
+# major_version_zero = true
+
+[tool.pytest.ini_options]
+minversion = "9.0"
+addopts = """
+    -ra -q
+    --strict-markers
+    --strict-config
+    --tb=short
+    -n auto
+    --cov=amlight_programmable_data_plane
+    --cov-report=term-missing
+    --cov-report=xml:.reports/coverage.xml
+    --cov-report=html:.reports/htmlcov
+    --timeout=60
+    --disable-socket
+    --allow-unix-socket
+    --benchmark-columns=min,mean,stddev,outliers,rounds,iterations
+    --benchmark-group-by=group
+    --benchmark-warmup=on
+    --benchmark-disable
+"""
+
+testpaths = ["tests"]
+pythonpath = ["src"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.pytest_env]
+TESTING_MODE = "1"
+# MOCK_CONTROLLER_IP = "127.0.0.1"
+
+[tool.codespell]
+skip = ".git,*.lock,.venv,*.xml"
+
+[tool.coverage.report]
+exclude_also = [
+  "def __repr__",
+  "if TYPE_CHECKING:",
+  "@(typing\\.)?overload",
+  "raise NotImplementedError",
+  "\\.\\.\\.",
+]
+
+[tool.ruff]
+# Align this exactly with your minimum Python version
+target-version = "py312"
+line-length = 120
+
+[tool.ruff.lint]
+# Core rules
+select = [
+  "F",    # Pyflakes: Core logic errors
+  "E",
+  "W",    # Pycodestyle: Formatting and style guidelines
+  "I",    # isort: Strict import sorting
+  "N",    # pep8-naming: Enforces consistent naming conventions
+  "D",    # pydocstyle: Enforces docstring presence and style
+  "UP",   # pyupgrade: Forces modern Python syntax (e.g., modern type hinting)
+  "ANN",  # flake8-annotations: Enforces strict type hinting on all functions
+  "S",    # flake8-bandit: Automated security scanning
+  "BLE",  # flake8-blind-except: Prevents swallowing exceptions silently
+  "FBT",  # flake8-boolean-trap: Prevents unreadable boolean arguments
+  "B",    # flake8-bugbear: Catches common Python logic bugs
+  "A",    # flake8-builtins: Prevents shadowing Python built-ins
+  "C4",   # flake8-comprehensions: Optimizes loops into list/dict comprehensions
+  "DTZ",  # flake8-datetimez: Enforces timezone-aware datetimes
+  "T10",  # flake8-debugger: Prevents committing breakpoint() or pdb
+  "EM",   # flake8-errmsg: Enforces clean, traceback-friendly error messages
+  "ISC",  # flake8-implicit-str-concat: Prevents subtle string formatting bugs
+  "G",    # flake8-logging-format: Enforces efficient logging
+  "PIE",  # flake8-pie: Miscellaneous linting rules
+  "T20",  # flake8-print: Prevents committing print() statements
+  "PT",   # flake8-pytest-style: Enforces clean pytest fixtures and assertions
+  "Q",    # flake8-quotes: Enforces consistent quote styles
+  "RET",  # flake8-return: Simplifies return statements and branching
+  "SIM",  # flake8-simplify: Refactors complex code into simpler equivalents
+  "TCH",  # flake8-type-checking: Optimizes imports for Pyright/type checking
+  "ARG",  # flake8-unused-arguments: Flags dead variables
+  "PTH",  # flake8-use-pathlib: Forces pathlib over os.path (Modern standard)
+  "ERA",  # eradicate: Prevents committing commented-out code
+  "PL",   # Pylint: Comprehensive code analysis
+  "TRY",  # tryceratops: Enforces best practices for try/except blocks
+  "PERF", # Perflint: Performance anti-patterns
+  "RUF",  # Ruff-specific rules
+]
+
+ignore = [
+  # Required for formatter conflicts. Do not remove these.
+  "ISC001",
+  "COM812",
+
+  # REQUIRED: Resolve mutually exclusive docstring rules
+  "D203", # 1 blank line required before class docstring
+  "D212", # multi line docstring summary should start at the first line
+
+  # Disable rules that are too annoying
+  "D100", # Missing docstring in public module
+  "D104", # Missing docstring in public package
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Testing files need exceptions to function correctly
+"tests/**/*" = [
+  "S101", # Allow assert in tests
+  "T201", # Allow print in tests for debugging
+  "D101",
+  "D102",
+  "D103", # Do not require docstrings for every test function
+]
+
+[tool.ruff.format]
+quote-style = "double" # Override single quotes
