@@ -1,0 +1,198 @@
+name: Continuous Integration
+
+on: # yamllint disable-line rule:truthy
+  push:
+    branches: ["main", "master"]
+  pull_request:
+    branches: ["**"]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  prek-checks:
+    name: Code Quality & Fast Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: ".python-version"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+          # version: "latest"
+
+      - name: Hydrate Environment
+        run: uv sync --locked --all-extras --dev
+
+        # The code below was made so that the CI Pipeline does not constantly fail in large repositories with legacy code
+      - name: Run prek pipeline (Pull Request)
+        uses: j178/prek-action@v2
+        if: github.event_name == 'pull_request'
+        with:
+          # Forces prek to only lint files changed between the target branch and the PR branch
+          extra-args: --from-ref ${{ github.event.pull_request.base.sha }} --to-ref ${{ github.event.pull_request.head.sha }}
+
+      - name: Run prek pipeline (Push to Main)
+        uses: j178/prek-action@v2
+        if: github.event_name == 'push'
+        with:
+          # Forces prek to only lint files modified in the specific commits just pushed to main
+          extra-args: --from-ref ${{ github.event.before }} --to-ref ${{ github.event.after }}
+
+  comprehensive-tests:
+    name: Full Tests & Coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: prek-checks
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: ".python-version"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Hydrate Environment
+        run: uv sync --locked --all-extras --dev
+
+      - name: Run Full Test Suite & Generate Reports
+        # Runs the full suite, testinfra, and outputs a coverage report
+        run: |
+          mkdir -p .reports
+          uv run pytest tests \
+            --cov-report=xml:.reports/coverage.xml \
+            --junitxml=.reports/test-results.xml \
+            --snapshot-warn-unused \
+            > .reports/pytest-coverage.txt
+
+      - name: Enforce Patch Coverage (diff-cover)
+        if: github.event_name == 'pull_request' && always()
+        # diff-cover will only check the coverage for new code
+        # This will not check the coverage for the whole repository
+        # This was implemented to ensure that legacy and untested code wouldn't cause the CI Pipeline to fail constantly
+        run: |
+          uvx diff-cover .reports/coverage.xml \
+            --compare-branch=origin/${{ github.base_ref }} \
+            --fail-under=90 \
+            --markdown-report=.reports/diff-cover-report.md
+
+      - name: Write Diff Coverage to GitHub Summary
+        if: github.event_name == 'pull_request' && always()
+        run: |
+          if [ -f .reports/diff-cover-report.md ]; then
+            cat .reports/diff-cover-report.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "⚠️ diff-cover report was not generated." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Post Coverage Comment to Pull Request
+        uses: MishaKav/pytest-coverage-comment@v1
+        if: github.event_name == 'pull_request' && always()
+        with:
+          pytest-coverage-path: .reports/pytest-coverage.txt
+          junitxml-path: .reports/test-results.xml
+
+      - name: Upload Test Artifacts
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: pytest-artifacts
+          path: .reports
+          include-hidden-files: true
+          retention-days: 14
+
+  performance-benchmarks:
+    name: Execute Benchmarks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: prek-checks
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: ".python-version"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Hydrate Environment
+        run: uv sync --locked --all-extras --dev
+
+      - name: Execute Performance Benchmarks
+        # Runs the suite again but for benchmarks
+        run: uv run pytest tests -n 0 --benchmark-enable --benchmark-only --benchmark-columns=min,mean,stddev,outliers
+
+  profiling:
+    name: Scalene Profiler
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: prek-checks
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: ".python-version"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Hydrate Environment
+        run: uv sync --locked --all-extras --dev
+
+      - name: Execute Profiling Run
+        run: |
+          mkdir -p .reports
+          # It can also be changed to JSON format by removing --html and all of html extensions
+          # Generating the JSON profile
+          uv run scalene run --outfile .reports/scalene-profile.json \
+            src/amlight_programmable_data_plane/main.py
+
+          uv run scalene view --standalone .reports/scalene-profile.json
+
+          mv scalene-profile.html .reports/scalene-profile.html
+
+      - name: Upload Profile Artifact
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: scalene-profile
+          path: .reports
+          include-hidden-files: true
+          retention-days: 14

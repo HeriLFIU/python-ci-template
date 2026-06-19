@@ -1,0 +1,32 @@
+name: Release Please
+
+on:
+  push:
+    branches: ["main", "master"]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release-please:
+    name: Generate Release PR or Tag
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Run Release Please
+        uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          release-type: python
+
+          # Only add a line like this if your __init__.py also contains a version number which needs to be bumped.
+          # extra-files: |
+          #   [
+          #     "src/amlight_programmable_data_plane/__init__.py"
+          #   ]
