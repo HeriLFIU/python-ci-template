@@ -1,5 +1,5 @@
 [project]
-name = "amlight-programmable-data-plane"
+name = "foo"
 version = "0.1.0"
 description = "Project Template"
 authors = [{ name = "Someone Something", email = "email@gmail.com" }]
@@ -15,7 +15,7 @@ classifiers = [
 ]
 
 [project.urls]
-repository = "https://github.com/amlight/amlight-programmable-data-plane.git"
+repository = "bar"
 
 [dependency-groups]
 dev = [
@@ -45,7 +45,7 @@ lint = ["ruff>=0.15.13", "codespell>=2.2.6", "pyright>=1.1.410"]
 prof = ["scalene>=2.3.0"]
 
 [project.scripts]
-amlight-programmable-data-plane = "amlight_programmable_data_plane:main"
+foo = "foo:main"
 
 [build-system]
 requires = ["uv_build>=0.11.14,<0.12.0"]
@@ -77,7 +77,7 @@ addopts = """
     --strict-config
     --tb=short
     -n auto
-    --cov=amlight_programmable_data_plane
+    --cov=foo
     --cov-report=term-missing
     --cov-report=xml:.reports/coverage.xml
     --cov-report=html:.reports/htmlcov
