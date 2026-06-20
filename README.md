@@ -144,7 +144,7 @@ python-ci-template/
 - [Adding new prek hooks](docs/common_workflows/new_prek_hooks.md)
 - [Project Setup](docs/common_workflows/project_setup.md)
 - [Scalene Profiling](docs/common_workflows/scalene_profiling.md)
-- [Makefile Shortcuts](docs/common_workflows/makefile_shorcuts.md)
+- [Makefile Shortcuts](docs/common_workflows/makefile_shortcuts.md)
 - [CI Pipeline Lifecycle](docs/common_workflows/ci_lifecycle.md)
 
 ### Concepts
