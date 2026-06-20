@@ -46,14 +46,14 @@ jobs:
         if: github.event_name == 'pull_request'
         with:
           # Forces prek to only lint files changed between the target branch and the PR branch
-          extra-args: --from-ref ${{ github.event.pull_request.base.sha }} --to-ref ${{ github.event.pull_request.head.sha }}
+          extra-args: --from-ref ${{ github.event.pull_request.base.sha }} --to-ref ${{ github.event.pull_request.head.sha }} --skip no-commit-to-branch
 
       - name: Run prek pipeline (Push to Main)
         uses: j178/prek-action@v2
         if: github.event_name == 'push'
         with:
           # Forces prek to only lint files modified in the specific commits just pushed to main
-          extra-args: --from-ref ${{ github.event.before }} --to-ref ${{ github.event.after }}
+          extra-args: --from-ref ${{ github.event.before }} --to-ref ${{ github.event.after }} --skip no-commit-to-branch
 
   comprehensive-tests:
     name: Full Tests & Coverage
