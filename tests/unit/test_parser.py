@@ -1,4 +1,4 @@
-"""Unit tests demonstrating advanced pytest plugins and data plane logic."""
+"""Unit tests demonstrating advanced pytest plugins."""
 
 import socket
 import typing
@@ -7,7 +7,7 @@ import pytest
 from pytest_benchmark.fixture import BenchmarkFixture
 from syrupy.assertion import SnapshotAssertion
 
-from amlight_programmable_data_plane.parser import fetch_controller_status, parse_flow_header
+from foo.parser import fetch_controller_status, parse_flow_header
 
 
 def test_parse_flow_header_snapshot(snapshot: SnapshotAssertion) -> None:

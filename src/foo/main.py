@@ -1,4 +1,4 @@
-"""Primary entry point for the programmable data plane."""
+"""Primary entry point for foo."""
 
 import logging
 
@@ -13,7 +13,7 @@ def main() -> int:
         int: The system exit code.
 
     """
-    logger.info("Initializing amlight-programmable-data-plane...")
+    logger.info("Initializing foo...")
     return 0
 
 

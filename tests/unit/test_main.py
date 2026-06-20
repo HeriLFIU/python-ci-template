@@ -5,7 +5,7 @@ import logging
 import pytest
 from pytest_mock import MockerFixture
 
-from amlight_programmable_data_plane.main import main
+from foo.main import main
 
 
 def test_main_execution(mocker: MockerFixture, caplog: pytest.LogCaptureFixture) -> None:
@@ -13,10 +13,10 @@ def test_main_execution(mocker: MockerFixture, caplog: pytest.LogCaptureFixture)
     caplog.set_level(logging.INFO)
 
     # Using pytest-mock to spy on the internal logger
-    spy = mocker.spy(logging.getLogger("amlight_programmable_data_plane.main"), "info")
+    spy = mocker.spy(logging.getLogger("foo.main"), "info")
 
     exit_code = main()
 
     assert exit_code == 0
     assert spy.call_count == 1
-    assert "Initializing amlight-programmable-data-plane..." in caplog.text
+    assert "Initializing foo..." in caplog.text
