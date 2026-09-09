@@ -18,6 +18,7 @@ default_language_version:
   python: python3.12
 default_install_hook_types:
   - pre-commit
+  - pre-push
   - commit-msg
   - post-checkout
   - post-merge
@@ -275,7 +276,7 @@ repos:
       - id: no-commit-to-branch
         name: "🌳 git · Protect main branches"
         args: ["--branch", "main", "--branch", "master"]
-        stages: [commit]
+        stages: [pre-commit]
       - id: check-added-large-files
         name: "🌳 git · Block large file commits"
         args: ["--maxkb=5000"]
@@ -341,6 +342,9 @@ repos:
   #                            🐳 Containers                                     #
   # ---------------------------------------------------------------------------- #
 
+  # NOTE: the `hadolint` hook is `language: system` — it expects a `hadolint`
+  # binary already on your PATH. Swap it for `hadolint-docker` if you would
+  # rather run it through Docker. It is inert until the repo has a Dockerfile.
   - repo: https://github.com/hadolint/hadolint
     rev: v2.12.0
     hooks:

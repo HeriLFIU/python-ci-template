@@ -35,7 +35,17 @@ async def test_fetch_controller_status_async() -> None:
     assert status == "operational"
 
 
+def _attempt_outbound_connection() -> None:
+    """Try to reach a non-loopback address, which pytest-socket must block."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.settimeout(1)
+        sock.connect(("10.255.255.1", 80))
+
+
 def test_network_isolation_is_active() -> None:
     """Demonstrate pytest-socket actively blocking rogue network calls."""
-    with pytest.raises(RuntimeError, match=r"A test tried to use socket\.socket\."):
-        socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # POSIX blocks socket creation outright via --disable-socket. Windows allows
+    # creation (asyncio needs it) but blocks connect() to anything off loopback,
+    # so both platforms raise a RuntimeError subclass, just one step apart.
+    with pytest.raises(RuntimeError):
+        _attempt_outbound_connection()

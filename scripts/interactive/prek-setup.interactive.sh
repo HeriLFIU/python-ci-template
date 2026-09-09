@@ -170,7 +170,11 @@ displayHelpInfo() {
 startMenu() {
     while true; do
         options=("quit" "setup" "select package manager" "install prek" "install prek hooks" "test hooks")
+        # Tracks whether the select loop ended through a menu choice or because
+        # stdin closed (Ctrl+D, or the script being run non-interactively).
+        selection_made=""
         select option in "${options[@]}"; do
+            selection_made="yes"
             case "$option" in
             "q" | "quit" | "exit")
                 break 2 # Exit the while loop, not just the case block
@@ -201,12 +205,18 @@ startMenu() {
                 ;;
             esac
         done
+
+        if [[ -z ${selection_made} ]]; then
+            echo -e "
+Input stream closed. Exiting menu."
+            break
+        fi
     done
 }
 
 # Main
 
-case $1 in
+case ${1:-} in
 setup)
     setupPrek
     echo "prek was successfully set up"

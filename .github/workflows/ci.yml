@@ -82,22 +82,35 @@ jobs:
 
       - name: Run Full Test Suite & Generate Reports
         # Runs the full suite, testinfra, and outputs a coverage report
+        # `tee` keeps the output visible in the job log while still capturing
+        # it for the PR comment; `shell: bash` enables pipefail so a failing
+        # test run is not masked by tee's own exit code.
+        shell: bash
         run: |
           mkdir -p .reports
           uv run pytest tests \
             --cov-report=xml:.reports/coverage.xml \
             --junitxml=.reports/test-results.xml \
             --snapshot-warn-unused \
-            > .reports/pytest-coverage.txt
+            | tee .reports/pytest-coverage.txt
 
       - name: Enforce Patch Coverage (diff-cover)
         if: github.event_name == 'pull_request' && always()
         # diff-cover will only check the coverage for new code
         # This will not check the coverage for the whole repository
         # This was implemented to ensure that legacy and untested code wouldn't cause the CI Pipeline to fail constantly
+        # BASE_REF is passed through the environment on purpose: branch names
+        # are attacker-controlled on fork pull requests and must never be
+        # interpolated straight into a shell command.
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: |
+          if [ ! -f .reports/coverage.xml ]; then
+            echo "::warning::No coverage report found; the test suite likely failed before writing one."
+            exit 0
+          fi
           uvx diff-cover .reports/coverage.xml \
-            --compare-branch=origin/${{ github.base_ref }} \
+            --compare-branch="origin/$BASE_REF" \
             --fail-under=90 \
             --markdown-report=.reports/diff-cover-report.md
 
@@ -111,8 +124,15 @@ jobs:
           fi
 
       - name: Post Coverage Comment to Pull Request
+        # Pull requests opened from a fork receive a read-only GITHUB_TOKEN, so
+        # this step is skipped there instead of failing the job. The coverage
+        # numbers stay available in the job log, the step summary, and the
+        # uploaded artifacts.
         uses: MishaKav/pytest-coverage-comment@v1
-        if: github.event_name == 'pull_request' && always()
+        if: >-
+          always()
+          && github.event_name == 'pull_request'
+          && github.event.pull_request.head.repo.full_name == github.repository
         with:
           pytest-coverage-path: .reports/pytest-coverage.txt
           junitxml-path: .reports/test-results.xml
@@ -182,7 +202,7 @@ jobs:
           # It can also be changed to JSON format by removing --html and all of html extensions
           # Generating the JSON profile
           uv run scalene run --outfile .reports/scalene-profile.json \
-            src/amlight_programmable_data_plane/main.py
+            src/foo/main.py
 
           uv run scalene view --standalone .reports/scalene-profile.json
 
