@@ -127,6 +127,13 @@ python-ci-template/
 
 ## 📚 Additional Documentation
 
+### AI Coding Agents
+
+- [AGENTS.md](AGENTS.md) — the non-interactive operating manual for AI coding
+  agents: how to commit without triggering the Commitizen wizard, the macOS /
+  Linux / Windows differences, and which commands will hang an agent.
+- [.agentignore](.agentignore) — paths agents should not read, index, or edit.
+
 ### Tools
 
 - [Tooling](docs/tooling.md)
