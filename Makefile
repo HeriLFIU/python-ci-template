@@ -44,16 +44,16 @@ test: ## Execute the full test suite
 	uv run pytest tests
 
 profile: ## Run Scalene profiler locally and open the Web UI
-	@echo "🔍 Launching Scalene Profiler on the data plane entry point..."
+	@echo "🔍 Launching Scalene Profiler on the application entry point..."
 	uv run scalene run \
 		--profile-all \
 		--reduced-profile \
-		src/amlight_programmable_data_plane/main.py
+		src/foo/main.py
 
 profile-export: ## Export Scalene profile as static HTML (This is broken)
 	@echo "💾 Exporting Scalene profile to .reports/..."
 	@mkdir -p .reports
-	uv run scalene run --outfile .reports/scalene-profile.json src/amlight_programmable_data_plane/main.py
+	uv run scalene run --outfile .reports/scalene-profile.json src/foo/main.py
 	uv run scalene view --standalone .reports/scalene-profile.json
 	mv scalene-profile.html .reports/scalene-profile.html
 

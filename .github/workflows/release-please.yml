@@ -25,8 +25,16 @@ jobs:
         with:
           release-type: python
 
+          # Release Please opens its release PR with the default GITHUB_TOKEN,
+          # and GitHub deliberately does not fire `pull_request` events for PRs
+          # created by that token. The release PR therefore gets NO CI run.
+          # To gate releases on CI, create a Personal Access Token (or GitHub
+          # App token) with `contents: write` and `pull-requests: write`, store
+          # it as the RELEASE_PLEASE_TOKEN secret, and uncomment the line below.
+          # token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+
           # Only add a line like this if your __init__.py also contains a version number which needs to be bumped.
           # extra-files: |
           #   [
-          #     "src/amlight_programmable_data_plane/__init__.py"
+          #     "src/foo/__init__.py"
           #   ]
