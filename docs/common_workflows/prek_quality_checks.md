@@ -28,7 +28,7 @@ This will run all hooks across all files, not just the staged ones. (We also pro
 To update all hook dependencies to their latest versions, run:
 
 ```bash
-uv run prek auto-update
+uv run prek autoupdate
 ```
 
 This will update all entries in `.pre-commit-config.yaml` (or `prek.toml`) to the latest commits. (Again, we often alias this as `make update-hooks`.)
