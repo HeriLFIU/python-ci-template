@@ -31,3 +31,41 @@ This setup step does several things automatically:
 - Installs Commitizen hooks (so `cz commit` or `git commit` triggers the wizard).
 
 After `make setup` completes, your environment is fully synchronized and ready for development.
+
+## 🪟 Developing on Windows
+
+The template is built and tested on Linux, but it runs on Windows. Use **Git Bash
+or WSL2** — `make` and the setup scripts need a POSIX shell.
+
+### What is handled automatically
+
+`--disable-socket` (in `pyproject.toml`'s `addopts`) blocks socket creation for
+every address family except AF_UNIX. Windows has no AF_UNIX event loop, so
+`asyncio` builds its self-pipe with `socket.socketpair()`, which falls back to a
+loopback TCP pair — meaning every async test would fail before it started.
+
+`tests/conftest.py` detects Windows and marks each test with pytest-socket's
+`allow_hosts` instead: sockets can be created, but `connect()` is restricted to
+loopback, so outbound network calls are still blocked. POSIX platforms keep the
+stricter `--disable-socket` behaviour. No configuration is needed either way.
+
+### Hooks that need extra toolchains
+
+Most hooks are pure Python (`shellcheck` and `checkov` included) and work
+everywhere. Three need a toolchain prek has to fetch or find:
+
+| Hook        | Language | Requirement                               |
+| ----------- | -------- | ----------------------------------------- |
+| `oxipng`    | `rust`   | Rust toolchain (prek downloads one)       |
+| `checkmake` | `golang` | Go toolchain (prek downloads one)         |
+| `hadolint`  | `system` | `hadolint` must already be on your `PATH` |
+
+If any of them cannot install on your machine, skip them per-invocation with the
+`SKIP` environment variable — it is honoured by prek during git hook runs:
+
+```bash
+SKIP=oxipng,checkmake git commit -m "feat(parser): add flow header parsing"
+```
+
+The same names work as `prek run --skip oxipng --skip checkmake`. CI runs on
+Linux, so anything skipped locally is still enforced on your pull request.
