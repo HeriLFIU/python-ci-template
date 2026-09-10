@@ -468,7 +468,51 @@ accidental PyPI publication. Remove it deliberately, never incidentally.
 
 ______________________________________________________________________
 
-## 10. Reporting back
+## 10. Reading CI & analysis feedback
+
+Most checks print everything you need to the terminal. A few produce
+*measurements* instead: the full suite with coverage, the micro-benchmarks, and
+the Scalene profiler. When a claim depends on a number — is this slower, is this
+covered, did this actually fail — read the artifact rather than assuming.
+
+**These runs are expensive**, in wall time and in tokens. They are deliberately
+not part of `make lint` or the commit hooks. Run them before a release, when a
+change is performance-sensitive, when coverage on new code is in question, or
+when asked — not on every edit, and never in a loop.
+
+```bash
+make report     # full suite → coverage XML + JUnit XML + coverage table in .reports/
+make bench      # benchmarks only, serial, JSON output
+make analyze    # both
+```
+
+Read the small files first, and extract rather than loading whole files:
+
+```bash
+grep -E "^\S+\.py +[0-9]+ +[0-9]+ +[0-9]+%" .reports/pytest-coverage.txt | awk '$4 != "100%"'
+cat .reports/diff-cover-report.md
+grep -A5 "<failure" .reports/test-results.xml
+```
+
+`.agentignore` excludes `.reports/` but re-includes those two small summary
+files on purpose, so a digest is available without the raw dumps. The large
+artifacts — `coverage.xml`, `scalene-profile.json`, `htmlcov/` — stay excluded;
+query them with a targeted command instead of opening them.
+
+For a failing pipeline, fetch the answer instead of reproducing it:
+
+```bash
+gh run view --log-failed
+gh run download <run-id> --name pytest-artifacts --dir .reports-ci
+```
+
+Details, including how to compare two benchmark runs and how to extract the hot
+lines from a Scalene profile, are in
+[docs/common_workflows/ci_feedback.md](docs/common_workflows/ci_feedback.md).
+
+______________________________________________________________________
+
+## 11. Reporting back
 
 - State which checks you actually ran, and paste real failure output rather than
   summarising it.
@@ -476,3 +520,6 @@ ______________________________________________________________________
   of implying a clean pass.
 - If you skipped hooks with `SKIP=` or `--skip`, name them.
 - Never claim a commit succeeded without confirming via `git log -1 --oneline`.
+- If you did not run the expensive analysis in
+  [§10](#10-reading-ci--analysis-feedback), do not describe its results. A
+  difference smaller than the reported standard deviation is noise, not a win.

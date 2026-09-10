@@ -9,7 +9,7 @@ SHELL := /bin/bash
 # Ensure that when you run "make" without any arguments it displays the help menu
 .DEFAULT_GOAL := help
 
-.PHONY: help all clean test setup profile profile-export lint format typecheck lock update-hooks
+.PHONY: help all clean test setup profile profile-export lint format typecheck lock update-hooks bench report analyze
 
 # ==============================================================================
 # Development Workflow
@@ -81,3 +81,27 @@ lock: ## Resolve dependencies and update the uv.lock file
 update-hooks: ## Update all Prek hooks to the latest version
 	@echo "⬆️ Updating PreK hook versions..."
 	uv run prek autoupdate
+
+# ==============================================================================
+# Deep Analysis (expensive — run deliberately, not on every change)
+# ==============================================================================
+#
+# These targets exist so that a human *or an AI coding agent* can read concrete
+# measurements instead of guessing. They are slow and they burn CPU, so they are
+# deliberately not wired into `lint` or the commit hooks. Run them before a
+# release, when a change is performance-sensitive, or when something is asked
+# of you that needs evidence.
+#
+# Everything lands in .reports/. See docs/common_workflows/ci_feedback.md for
+# which file answers which question.
+
+bench: ## Run micro-benchmarks only, serially, and record them as JSON
+	@mkdir -p .reports
+	uv run pytest tests -n 0 --benchmark-enable --benchmark-only --benchmark-json=.reports/benchmark.json
+
+report: ## Run the full suite and write machine-readable reports into .reports/
+	@mkdir -p .reports
+	uv run pytest tests --cov-report=xml:.reports/coverage.xml --junitxml=.reports/test-results.xml | tee .reports/pytest-coverage.txt
+
+analyze: report bench ## Everything in `report`, plus benchmarks — the full local evidence pass
+	@echo "📊 Reports written to .reports/. See docs/common_workflows/ci_feedback.md."

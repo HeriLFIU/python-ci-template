@@ -7,6 +7,7 @@
 exclude: |
   (?x)^(
       .*\{\{.*\}\}.*|     # Exclude any files with cookiecutter variables
+      copier-template/.*| # Copier template: Jinja sources, own tooling config
       docs/site/.*|       # Exclude mkdocs compiled files
       \.history/.*|       # Exclude history files
       .*cache.*/.*|       # Exclude cache directories
@@ -222,8 +223,11 @@ repos:
         additional_dependencies:
           - prettier@3.4.2
 
+  # NOTE: keep yamllint at v1.36.0 or newer. Older versions decode YAML with the
+  # locale encoding, so the emoji in this file crash the hook on Windows (cp1252).
+  # 1.36+ always reads YAML as UTF-8, which keeps Windows and Linux consistent.
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.35.1
+    rev: v1.38.0
     hooks:
       - id: yamllint
         name: "⚙️ yaml · Lint YAML files"
