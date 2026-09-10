@@ -449,28 +449,6 @@ ______________________________________________________________________
 
 ## 9. Using this repo as a template
 
-There are two ways to start a project from this repo, and they are not
-equivalent.
-
-### 9.1 Preferred: the Copier template
-
-`copier-template/` in this repository is a full [Copier](https://copier.readthedocs.io/)
-template built from these files. It asks for the package name, author, license,
-Python version and feature set, and writes a project with every one of the sites
-below already substituted — and, unlike a clone, the generated project stays
-linked to the template so `copier update` can deliver later improvements.
-
-```bash
-uv tool install copier
-copier copy ./copier-template ../my-new-project
-```
-
-`copier-template/README.md` and `copier-template/AGENTS.md` document how the
-template is built and how to change it. **Do not lint or format anything under
-`copier-template/template/`** — those files are Jinja, not valid Python/TOML/YAML.
-
-### 9.2 Manual: renaming by hand after a clone
-
 The placeholder package is named `foo`. Renaming it means touching **every** site
 below — miss one and coverage, the entry point, or CI silently breaks:
 
