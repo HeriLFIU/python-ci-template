@@ -74,9 +74,21 @@ cython_debug/
 #                          Test, coverage & profiler output                    #
 # ---------------------------------------------------------------------------- #
 
-# Written by `uv run pytest` and by the CI jobs. Read the terminal output
-# instead — these are large, regenerated on every run, and never committed.
-.reports/
+# Written by `uv run pytest` and by the CI jobs. These are large and are
+# regenerated on every run, so they are excluded by default.
+#
+# The two *small* summary files are re-included on purpose: they are the digest
+# an agent needs to act on real measurements instead of guessing, and they are
+# cheap to read. Everything else here should be queried with a targeted command
+# (grep/awk) rather than loaded whole. See docs/common_workflows/ci_feedback.md.
+#
+# The trailing `/*` matters: a plain `.reports/` would exclude the directory
+# itself, and gitignore syntax cannot re-include anything underneath an
+# excluded directory.
+.reports/*
+!.reports/pytest-coverage.txt
+!.reports/diff-cover-report.md
+
 htmlcov/
 cover/
 .coverage

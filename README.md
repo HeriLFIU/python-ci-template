@@ -11,6 +11,7 @@ A repository containing a universal continuous integration template for Python a
 
 - [Prerequisites](#-prerequisites)
 - [Quick Start](#-quick-start)
+- [Generate a Project with Copier](#-generate-a-project-with-copier-recommended)
 - [Quick Minimal Setup](#-quick-minimal-setup)
 - [Usage](#-usage)
 - [Additional Documentation](#-additional-documentation)
@@ -43,6 +44,54 @@ Then run the following command and you can get started on your python project.
 ```bash
 make setup
 ```
+
+## 🧬 Generate a Project with Copier (recommended)
+
+Cloning this repository gives you a project called `foo` that you then have to
+rename by hand in eight places. The alternative is to generate a project from
+the [Copier](https://copier.readthedocs.io/) template in
+[`copier-template/`](copier-template), which asks for the package name, author,
+license, Python version and feature set and substitutes all of them for you.
+
+```bash
+uv tool install copier
+copier copy ./copier-template ../my-new-project
+```
+
+Then, **in this order** — it matters:
+
+```bash
+cd ../my-new-project
+git init -b main                                    # copier update needs a git repo
+uv sync                                             # writes uv.lock; CI runs --locked
+git add -A && git commit -m "chore: initial commit from template"
+make setup                                          # installs the hooks LAST
+```
+
+The hooks go last because `no-commit-to-branch` rejects commits on `main`, which
+would otherwise block that very first commit.
+
+### Why bother
+
+A generated project keeps a `.copier-answers.yml` recording the template, its
+version, and every answer. That link means template improvements can be merged
+into an existing project later instead of copied by hand:
+
+```bash
+copier update              # three-way merge; your own edits are replayed on top
+copier update --pretend    # dry run, writes nothing
+copier update --defaults --data line_length=100   # change one answer
+```
+
+Copier follows the template's newest **git tag**, so tag a release for it to be
+picked up (or use `copier update --vcs-ref=HEAD`). Conflicts arrive as ordinary
+`<<<<<<<` markers; find them with `git grep -n "^<<<<<<<"` and resolve them
+before committing. Never hand-edit `.copier-answers.yml`.
+
+Every generated project ships a full guide at
+`docs/common_workflows/copier_template.md` covering the CLI, both conflict
+modes, `update` vs `recopy`, and answering from a file. The template's own
+documentation lives in [copier-template/README.md](copier-template/README.md).
 
 ## 🛠 Quick Minimal Setup
 
@@ -153,6 +202,7 @@ python-ci-template/
 - [Scalene Profiling](docs/common_workflows/scalene_profiling.md)
 - [Makefile Shortcuts](docs/common_workflows/makefile_shortcuts.md)
 - [CI Pipeline Lifecycle](docs/common_workflows/ci_lifecycle.md)
+- [Reading CI & Profiler Feedback](docs/common_workflows/ci_feedback.md)
 
 ### Concepts
 
